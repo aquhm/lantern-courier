@@ -6,9 +6,10 @@
 
 ## 환경
 
-- Unity 6000.3.5f2
-- UniTask, R3
+- Unity 6000.3.5f2, URP
+- UniTask 2.5.11 (git UPM)
+- R3 1.3.1: 본체는 NuGetForUnity로 `Assets/Packages/`, Unity 연동은 git UPM `com.cysharp.r3`
 
 ## 상태
 
-프로젝트 생성 전.
+빈 URP 프로젝트. 게임 코드 없음.
