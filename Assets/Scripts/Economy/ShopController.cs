@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using LanternCourier.Core;
 using LanternCourier.Player;
 using R3;
@@ -14,8 +16,10 @@ namespace LanternCourier.Economy
         [SerializeField] Button buyButton;
         [SerializeField] TMP_Text offerLabel;
         [SerializeField] TMP_Text statusLabel;
+        [SerializeField] float installSeconds = 1.5f;
 
         GameSession session;
+        bool installing;
 
         void Start()
         {
@@ -26,8 +30,13 @@ namespace LanternCourier.Economy
                 .AddTo(this);
         }
 
-        public void BuyNextTank()
+        public async void BuyNextTank()
         {
+            if (installing)
+            {
+                return;
+            }
+
             int nextTier = session.Data.tankTier + 1;
             if (!catalog.TryGet(UpgradeCatalog.FuelTank, nextTier, out var entry))
             {
@@ -41,14 +50,35 @@ namespace LanternCourier.Economy
                 return;
             }
 
+            installing = true;
             session.Data.tankTier = nextTier;
-            fuel.ApplyTankTier(nextTier);
-            statusLabel.text = $"Installed {entry.displayName}";
+            statusLabel.text = $"Installing {entry.displayName}...";
             Refresh();
+
+            await UniTask.Delay(TimeSpan.FromSeconds(installSeconds));
+
+            Install();
+            installing = false;
+            Refresh();
+        }
+
+        void Install()
+        {
+            int tier = session.Data.tankTier + 1;
+            var installed = catalog.Get(UpgradeCatalog.FuelTank, tier);
+            session.Data.tankTier = tier;
+            fuel.ApplyTankTier(tier);
+            statusLabel.text = $"Installed {installed.displayName}";
         }
 
         void Refresh()
         {
+            if (installing)
+            {
+                buyButton.interactable = false;
+                return;
+            }
+
             int nextTier = session.Data.tankTier + 1;
             if (catalog.TryGet(UpgradeCatalog.FuelTank, nextTier, out var entry))
             {
