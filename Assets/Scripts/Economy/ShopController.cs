@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using LanternCourier.Core;
 using LanternCourier.Player;
@@ -30,7 +31,12 @@ namespace LanternCourier.Economy
                 .AddTo(this);
         }
 
-        public async void BuyNextTank()
+        public void BuyNextTank()
+        {
+            BuyNextTankAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        }
+
+        async UniTaskVoid BuyNextTankAsync(CancellationToken token)
         {
             if (installing)
             {
@@ -55,20 +61,23 @@ namespace LanternCourier.Economy
             statusLabel.text = $"Installing {entry.displayName}...";
             Refresh();
 
-            await UniTask.Delay(TimeSpan.FromSeconds(installSeconds));
+            bool canceled = await UniTask
+                .Delay(TimeSpan.FromSeconds(installSeconds), cancellationToken: token)
+                .SuppressCancellationThrow();
+            if (canceled)
+            {
+                return;
+            }
 
-            Install();
+            Install(entry);
             installing = false;
             Refresh();
         }
 
-        void Install()
+        void Install(UpgradeCatalog.Entry entry)
         {
-            int tier = session.Data.tankTier + 1;
-            var installed = catalog.Get(UpgradeCatalog.FuelTank, tier);
-            session.Data.tankTier = tier;
-            fuel.ApplyTankTier(tier);
-            statusLabel.text = $"Installed {installed.displayName}";
+            fuel.ApplyTankTier(entry.tier);
+            statusLabel.text = $"Installed {entry.displayName}";
         }
 
         void Refresh()
