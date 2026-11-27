@@ -21,17 +21,11 @@ namespace LanternCourier.Quest
 
         void Awake()
         {
-            board.OrderAdded += AddRow;
-            board.OrderRemoved += RemoveRow;
             board.OrderAccepted += ShowActive;
             board.OrderCompleted += OnOrderCompleted;
 
-            foreach (var order in board.Available)
-            {
-                AddRow(order);
-            }
-
             ShowActive(board.Active);
+            SetOpen(window.activeSelf);
         }
 
         void OnDestroy()
@@ -61,6 +55,28 @@ namespace LanternCourier.Quest
         public void SetOpen(bool open)
         {
             window.SetActive(open);
+
+            if (open)
+            {
+                RebuildRows();
+                board.OrderAdded += AddRow;
+                board.OrderRemoved += RemoveRow;
+            }
+        }
+
+        void RebuildRows()
+        {
+            foreach (var row in rows.Values)
+            {
+                Destroy(row);
+            }
+
+            rows.Clear();
+
+            foreach (var order in board.Available)
+            {
+                AddRow(order);
+            }
         }
 
         void AddRow(DeliveryOrder order)
@@ -69,7 +85,7 @@ namespace LanternCourier.Quest
             row.GetComponentInChildren<TMP_Text>().text =
                 $"#{order.Id}  {order.Origin} > {order.Destination}   {order.Reward}c";
             row.GetComponentInChildren<Button>().onClick.AddListener(() => Accept(order));
-            rows.Add(order, row);
+            rows[order] = row;
         }
 
         void RemoveRow(DeliveryOrder order)
