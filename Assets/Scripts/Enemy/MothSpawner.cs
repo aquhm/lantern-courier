@@ -1,5 +1,9 @@
+using System;
+using Cysharp.Threading.Tasks;
 using LanternCourier.World;
 using UnityEngine;
+using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 namespace LanternCourier.Enemy
 {
@@ -8,39 +12,66 @@ namespace LanternCourier.Enemy
         [SerializeField] MothBrain mothPrefab;
         [SerializeField] Transform[] spawnPoints;
         [SerializeField] DayNightCycle cycle;
-        [SerializeField] float spawnInterval = 4f;
+        [SerializeField, FormerlySerializedAs("spawnInterval")] float waveInterval = 4f;
+        [SerializeField] int maxPerWave = 3;
+        [SerializeField] float waveSpread = 1.5f;
         [SerializeField] int maxAlive = 6;
 
-        float timer;
         int alive;
+        int wave;
         int nextPoint;
 
         public int Alive => alive;
+        public int Wave => wave;
 
-        void Update()
+        void Start()
         {
-            if (!cycle.IsNight)
-            {
-                timer = 0f;
-                return;
-            }
-
-            timer += Time.deltaTime;
-            if (timer < spawnInterval || alive >= maxAlive)
-            {
-                return;
-            }
-
-            timer = 0f;
-            Spawn();
+            RunNightWaves().Forget();
         }
 
-        void Spawn()
+        async UniTaskVoid RunNightWaves()
         {
+            while (true)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(waveInterval));
+
+                try
+                {
+                    if (cycle.IsNight)
+                    {
+                        SpawnWave();
+                    }
+                    else
+                    {
+                        wave = 0;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+        }
+
+        void SpawnWave()
+        {
+            wave++;
+
             var point = spawnPoints[nextPoint];
             nextPoint = (nextPoint + 1) % spawnPoints.Length;
 
-            var moth = Instantiate(mothPrefab, point.position, Quaternion.identity);
+            var origin = point.position;
+            int count = Mathf.Min(wave, maxPerWave, maxAlive - alive);
+            for (int i = 0; i < count; i++)
+            {
+                var offset = Random.insideUnitCircle * waveSpread;
+                Spawn(origin + new Vector3(offset.x, 0f, offset.y));
+            }
+        }
+
+        void Spawn(Vector3 position)
+        {
+            var moth = Instantiate(mothPrefab, position, Quaternion.identity);
             moth.Init(this, cycle);
             alive++;
         }
