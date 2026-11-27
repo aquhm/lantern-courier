@@ -23,7 +23,8 @@ namespace LanternCourier.UI
             var fuel = GameSession.Instance.FuelRatio;
             fuel.Subscribe(Render)
                 .AddTo(this);
-            fuel.Subscribe(UpdateWarning);
+            fuel.Subscribe(UpdateWarning)
+                .AddTo(this);
         }
 
         void Render(float ratio)
