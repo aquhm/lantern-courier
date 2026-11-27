@@ -25,7 +25,7 @@ namespace LanternCourier.Save
 
         void OnOrderCompleted(DeliveryOrder order)
         {
-            SaveAsync(destroyCancellationToken);
+            SaveAsync(destroyCancellationToken).Forget();
         }
 
         void OnApplicationPause(bool paused)
@@ -46,9 +46,27 @@ namespace LanternCourier.Save
             string staging = path + ".tmp";
 
             await UniTask.SwitchToThreadPool();
-            await File.WriteAllTextAsync(staging, json, token);
-            File.Move(staging, path);
-            await UniTask.SwitchToMainThread(token);
+            try
+            {
+                await File.WriteAllTextAsync(staging, json, token);
+                if (File.Exists(path))
+                {
+                    File.Replace(staging, path, null);
+                }
+                else
+                {
+                    File.Move(staging, path);
+                }
+            }
+            catch (IOException e)
+            {
+                Debug.LogWarning($"Checkpoint save failed, keeping the previous save: {e.Message}");
+                return;
+            }
+            finally
+            {
+                await UniTask.SwitchToMainThread();
+            }
 
             SaveCount++;
         }
