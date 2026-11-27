@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LanternCourier.Player.Flare
   hitMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 384
   speed: 14
   flightTime: 0.6
   restHeight: 0.2
