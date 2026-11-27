@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using LanternCourier.World;
 using UnityEngine;
@@ -26,14 +27,20 @@ namespace LanternCourier.Enemy
 
         void Start()
         {
-            RunNightWaves().Forget();
+            RunNightWaves(this.GetCancellationTokenOnDestroy()).Forget();
         }
 
-        async UniTaskVoid RunNightWaves()
+        async UniTaskVoid RunNightWaves(CancellationToken token)
         {
             while (true)
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(waveInterval));
+                bool canceled = await UniTask
+                    .Delay(TimeSpan.FromSeconds(waveInterval), cancellationToken: token)
+                    .SuppressCancellationThrow();
+                if (canceled)
+                {
+                    return;
+                }
 
                 try
                 {
