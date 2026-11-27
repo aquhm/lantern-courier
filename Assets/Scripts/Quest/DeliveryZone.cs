@@ -26,7 +26,7 @@ namespace LanternCourier.Quest
                 return;
             }
 
-            var recipient = GetComponentInChildren<Recipient>();
+            var recipient = GetComponentInChildren<Recipient>(true);
             recipient.Receive(order);
 
             var session = GameSession.Instance;
