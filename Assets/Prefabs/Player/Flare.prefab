@@ -48,14 +48,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LanternCourier.Player.Flare
   hitMask:
     serializedVersion: 2
-    m_Bits: 384
-  speed: 12
+    m_Bits: 256
+  speed: 14
   flightTime: 0.6
   restHeight: 0.2
-  burnTime: 4
+  burnTime: 5
   contactRadius: 0.3
-  lureRadius: 6
-  stunSeconds: 2.5
+  lureRadius: 7.5
+  stunSeconds: 3
   pulseInterval: 0.25
 --- !u!1 &6526946324489785640
 GameObject:
