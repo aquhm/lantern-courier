@@ -19,6 +19,7 @@ namespace LanternCourier.World
 
         float hour;
         StreetLamp[] lamps = System.Array.Empty<StreetLamp>();
+        bool lampsLit;
 
         public float Hour
         {
@@ -40,7 +41,7 @@ namespace LanternCourier.World
         void Start()
         {
             lamps = FindObjectsByType<StreetLamp>(FindObjectsSortMode.None);
-            SetLamps(hour >= lampsOnHour || hour < lampsOffHour);
+            SetLamps(LampsShouldBeLit());
         }
 
         void Update()
@@ -51,19 +52,21 @@ namespace LanternCourier.World
 
         void UpdateLamps()
         {
-            float minute = Mathf.Floor(hour * 60f) / 60f;
-            if (minute == lampsOnHour)
+            bool lit = LampsShouldBeLit();
+            if (lit != lampsLit)
             {
-                SetLamps(true);
+                SetLamps(lit);
             }
-            else if (minute == lampsOffHour)
-            {
-                SetLamps(false);
-            }
+        }
+
+        bool LampsShouldBeLit()
+        {
+            return hour >= lampsOnHour || hour < lampsOffHour;
         }
 
         void SetLamps(bool lit)
         {
+            lampsLit = lit;
             foreach (var lamp in lamps)
             {
                 if (lamp.IsLit != lit)
