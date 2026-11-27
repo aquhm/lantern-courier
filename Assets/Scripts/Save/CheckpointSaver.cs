@@ -1,3 +1,6 @@
+using System.IO;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using LanternCourier.Core;
 using LanternCourier.Quest;
 using UnityEngine;
@@ -22,14 +25,31 @@ namespace LanternCourier.Save
 
         void OnOrderCompleted(DeliveryOrder order)
         {
-            Save();
+            SaveAsync(destroyCancellationToken);
         }
 
-        public void Save()
+        void OnApplicationPause(bool paused)
+        {
+            if (paused)
+            {
+                SaveAsync(destroyCancellationToken).Forget();
+            }
+        }
+
+        public async UniTask SaveAsync(CancellationToken token)
         {
             var session = GameSession.Instance;
             session.CaptureWallet();
-            SaveSerializer.Write(session.Data);
+            string json = JsonUtility.ToJson(session.Data, true);
+
+            string path = SaveSerializer.FilePath;
+            string staging = path + ".tmp";
+
+            await UniTask.SwitchToThreadPool();
+            await File.WriteAllTextAsync(staging, json, token);
+            File.Move(staging, path);
+            await UniTask.SwitchToMainThread(token);
+
             SaveCount++;
         }
     }
