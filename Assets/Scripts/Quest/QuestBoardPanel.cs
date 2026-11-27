@@ -21,6 +21,8 @@ namespace LanternCourier.Quest
 
         void Awake()
         {
+            board.OrderAdded += AddRow;
+            board.OrderRemoved += RemoveRow;
             board.OrderAccepted += ShowActive;
             board.OrderCompleted += OnOrderCompleted;
 
@@ -59,8 +61,6 @@ namespace LanternCourier.Quest
             if (open)
             {
                 RebuildRows();
-                board.OrderAdded += AddRow;
-                board.OrderRemoved += RemoveRow;
             }
         }
 
